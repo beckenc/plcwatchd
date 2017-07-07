@@ -202,6 +202,10 @@ int main(int argc, char *argv[]) {
          string receipt = push_emergency(retry, expire, key, token);
          bool acknowledged = false;
 
+         if(receipt.empty()) {
+            continue; // error during pushing... retry
+         }
+         
          do {
             sleep(5); // respect API and wait 5 seconds
             cout << "Acknowledged?" << endl;

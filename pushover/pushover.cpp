@@ -9,23 +9,25 @@
 #include <iostream>
 #include <curl/curl.h>
 #include "pushover.h"
-#include "Jzon.hpp"
+
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+#include <iostream>
 
 using namespace std;
 
 /** @brief Parse json response, got from libcurl
  */
 static size_t curl_process(void *contents, size_t size, size_t nmemb,
-      Jzon::Node *node) {
+      rapidjson::Document *document) {
    size_t realsize = size * nmemb;
 
    string response;
    response.append((char*) contents, realsize);
-//   cout << "Response: " << response << endl;
-
-   Jzon::Parser json;
-   *node = json.parseString(response);
-
+   //cout << "Response: " << response << endl;
+   document->Parse(response.c_str());
+ 
    return realsize;
 }
 
@@ -55,8 +57,8 @@ string push_emergency(const char* retry, const char* expire,
 
       cout << "Request: " << post_data << endl;
 
-      // The pushover response is parsed into a Jzon::Node
-      Jzon::Node response;
+      // The pushover response is parsed into a rapidjson::Document
+      rapidjson::Document response;
 
       /* First set the URL that is about to receive our POST. This URL can
        just as well be a https:// URL if that is what should receive the
@@ -76,24 +78,23 @@ string push_emergency(const char* retry, const char* expire,
       res = curl_easy_perform(curl);
       /* Check for errors */
       if (res != CURLE_OK) {
-         cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res)
-               << endl;
+         cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+      } else if(response.HasParseError()) {
+         cerr << "response has parse error" << endl;
       } else {
          // evaluate json response, extract receipt
-         if (!response.has("status") || response.get("status").toInt() != 1) {
-            if (response.has("errors")) {
-               Jzon::Node errors = response.get("errors");
-               for (Jzon::Node::iterator it = errors.begin();
-                     it != errors.end(); ++it) {
-                  cout << "push_emergency(): " << it->second.toString() << endl;
+         if (!response.HasMember("status") || response["status"].GetInt() != 1) {
+            if (response.HasMember("errors")) {
+               const rapidjson::Value& errors = response["errors"];
+               for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
+                  cout << "push_emergency(): " << itr->GetString() << endl;
                }
             } else {
-               cout << "push_emergency(): Unable to access pushover.net"
-                     << endl;
+               cout << "push_emergency(): Unable to access pushover.net" << endl;
             }
          }
-         if (response.has("receipt")) {
-            receipt = response.get("receipt").toString();
+         if (response.HasMember("receipt")) {
+            receipt = response["receipt"].GetString();
             cout << "Receipt: " << receipt << endl;
          }
       }
@@ -123,8 +124,8 @@ void cancel_emergency(const string& receipt, const char* token) {
 
       cout << "Request: " << get_data << "?" << post_data << endl;
 
-      // The pushover response is parsed into a Jzon::Node
-      Jzon::Node response;
+      // The pushover response is parsed into a rapidjson::Document
+      rapidjson::Document response;
 
       /* First set the URL that is about to receive our POST. This URL can
        just as well be a https:// URL if that is what should receive the
@@ -145,19 +146,18 @@ void cancel_emergency(const string& receipt, const char* token) {
       if (res != CURLE_OK) {
          cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res)
                << endl;
-      } else {
+      } else if(response.HasParseError()) {
+         cerr << "response has parse error" << endl;
+      }else {
          // evaluate json response, extract receipt
-         if (!response.has("status") || response.get("status").toInt() != 1) {
-            if (response.has("errors")) {
-               Jzon::Node errors = response.get("errors");
-               for (Jzon::Node::iterator it = errors.begin();
-                     it != errors.end(); ++it) {
-                  cout << "cancel_emergency(): " << it->second.toString()
-                        << endl;
+         if (!response.HasMember("status") || response["status"].GetInt() != 1) {
+            if (response.HasMember("errors")) {
+               const rapidjson::Value& errors = response["errors"];
+               for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
+                  cout << "cancel_emergency(): " << itr->GetString() << endl;
                }
             } else {
-               cout << "cancel_emergency(): Unable to access pushover.net"
-                     << endl;
+               cout << "cancel_emergency(): Unable to access pushover.net" << endl;
             }
          }
       }
@@ -186,8 +186,8 @@ bool poll_receipt(const string& receipt, const char* token) {
 
       cout << "Request: " << get_data << endl;
 
-      // The pushover response is parsed into a Jzon::Node
-      Jzon::Node response;
+      // The pushover response is parsed into a rapidjson::Document
+      rapidjson::Document response;
 
       /* First set the URL that is about to receive our POST. This URL can
        just as well be a https:// URL if that is what should receive the
@@ -206,26 +206,27 @@ bool poll_receipt(const string& receipt, const char* token) {
       if (res != CURLE_OK) {
          cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res)
                << endl;
-      } else {
+      } else if(response.HasParseError()) {
+         cerr << "response has parse error" << endl;
+      }else {
          // evaluate json response, extract receipt
-         if (!response.has("status") || response.get("status").toInt() != 1) {
-            if (response.has("errors")) {
-               Jzon::Node errors = response.get("errors");
-               for (Jzon::Node::iterator it = errors.begin();
-                     it != errors.end(); ++it) {
-                  cout << "poll_receipt(): " << it->second.toString() << endl;
+         if (!response.HasMember("status") || response["status"].GetInt() != 1) {
+            if (response.HasMember("errors")) {
+               const rapidjson::Value& errors = response["errors"];
+               for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
+                  cout << "poll_receipt(): " << itr->GetString() << endl;
                }
             } else {
                cout << "poll_receipt(): Unable to access pushover.net" << endl;
             }
          }
-         if (response.has("acknowledged")
-               && (response.get("acknowledged").toInt() == 1)) {
+         if (response.HasMember("acknowledged")
+               && (response["acknowledged"].GetInt() == 1)) {
             cout << "poll_receipt(): emergency acknowledged" << endl;
             acknowledged = true;
          }
-         if (response.has("expired")
-               && (response.get("expired").toInt() == 1)) {
+         if (response.HasMember("expired")
+               && (response["expired"].GetInt() == 1)) {
             cout << "poll_receipt(): emergency expired" << endl;
          }
       }

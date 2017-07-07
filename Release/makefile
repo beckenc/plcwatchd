@@ -11,7 +11,6 @@ RM := rm -rf
 -include snap7/subdir.mk
 -include pushover/subdir.mk
 -include main/subdir.mk
--include jzon/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -47,7 +46,7 @@ all: plcwatchd
 plcwatchd: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: Cygwin C++ Linker'
-	g++ -L../snap7 -o "plcwatchd" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++ -o "plcwatchd" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
