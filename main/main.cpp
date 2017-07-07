@@ -91,7 +91,7 @@ void daemonize() {
 }
 
 static void usage() {
-   cout << "Usage: plcwatchd [-v -d] -k key -t token [-c sec -e sec ]"
+   cout << "Usage: plcwatchd [-v -d] -k key -t token [-c sec -e sec ] "
          << "-i ip [-r num -s num]" << endl << endl
          << "  -v   verbose" << endl
          << "  -d   daemonize" << endl
@@ -100,8 +100,8 @@ static void usage() {
          << "  -c   retry - pushover.net retry parameter, default 60s" << endl
          << "  -e   expire - pushover.net expire parameter, default 600" << endl
          << "  -i   ip - address of the plc" << endl
-         << "  -r   rack - rack of the plc, default 2" << endl
-         << "  -s   slot - slot of the plc, default 0" << endl;
+         << "  -r   rack - rack of the plc, default 0" << endl
+         << "  -s   slot - slot of the plc, default 2" << endl;
 }
 
 int main(int argc, char *argv[]) {
