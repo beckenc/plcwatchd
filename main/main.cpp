@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <unistd.h>
-#include <string>
+#include <string.h>
 #include <csignal>
 #include <fstream>
 #include <sys/types.h>
@@ -34,7 +34,7 @@ static bool check(int result, const char * function) {
  * @param s Received signal
  */
 static void signal_handler(int s) {
-   cout << "SIG " << s << " received!" << endl;
+   cout << "SIG " << s << " (" << strsignal(s) << ") received!" << endl;
    if (s7Client.Connected()) {
       cout << "Disconnect from PLC" << endl;
       check(s7Client.Disconnect(), "s7Client.Disconnect()");
@@ -68,10 +68,10 @@ void daemonize() {
    }
 
    /* handle standart I/O */
-   i = open("/dev/null", O_RDWR);
-   if (dup(i) < 0) {
+   i = open("/dev/null", O_RDWR);   // stdin
+   if (dup(i) < 0) {                // stdout
    }
-   if (dup(i) < 0) {
+   if (dup(i) < 0) {                // stderr
    }
 
    if (chdir("/") < 0) {
@@ -101,12 +101,12 @@ static void usage() {
          << "  -e   expire - pushover.net expire parameter, default 600" << endl
          << "  -i   ip - address of the plc" << endl
          << "  -r   rack - rack of the plc, default 0" << endl
-         << "  -s   slot - slot of the plc, default 2" << endl;
+         << "  -s   slot - slot of the plc, default 2" << endl
+         << "  -l   logfile" << endl;
 }
 
 int main(int argc, char *argv[]) {
 
-   int status = EXIT_SUCCESS;
    int rack = 0;
    int slot = 2;
    const char* retry = "60";
@@ -114,15 +114,11 @@ int main(int argc, char *argv[]) {
    char* ip = NULL;
    char* key = NULL;
    char* token = NULL;
+   const char* logfile = "/dev/null";
    int option = 0;
    bool daemon = false;
    bool verbose = false;
-
-   //save cout / cerr stream buffer
-   streambuf* strm_out_buffer = cout.rdbuf();
-   streambuf* strm_err_buffer = cerr.rdbuf();
-   ofstream file("/dev/null");
-
+   
    // catch signals to close established Snap7 client connection ...
    signal(SIGABRT, &signal_handler);
    signal(SIGTERM, &signal_handler);
@@ -130,11 +126,10 @@ int main(int argc, char *argv[]) {
 
    if (argc <= 1) {
       usage();
-      status = EXIT_FAILURE;
-      goto ext;
+      return EXIT_FAILURE;
    }
 
-   while ((option = getopt(argc, argv, "dvi:r:s:k:t:c:e:")) != -1) {
+   while ((option = getopt(argc, argv, "dvi:r:s:k:t:c:e:l:")) != -1) {
       switch (option) {
       case 'v':
          verbose = true;
@@ -163,40 +158,40 @@ int main(int argc, char *argv[]) {
       case 'e':
          expire = optarg;
          break;
+      case 'l':
+         logfile = optarg;
+         break;
       default:
          usage();
-         status = EXIT_FAILURE;
-         goto ext;
+         return EXIT_FAILURE;
       }
    }
 
    // mandatory parameters available?
    if (rack == -1 || slot == -1 || !ip || !key || !token) {
       usage();
-      status = EXIT_FAILURE;
-      goto ext;
+      return EXIT_FAILURE;
    }
 
    // daemonize process and run forever
    if (daemon) {
       daemonize();
    }
-
-   if (!verbose || daemon) {
-      // redirect cout / cerr to /dev/null
-      cout.rdbuf(file.rdbuf());
-      cerr.rdbuf(file.rdbuf());
+      
+   if (!verbose || daemon) {    
+      // redirect cout / cerr to logfile
+      freopen(logfile, "a", stdout);
+      freopen(logfile, "a", stderr);
    }
-
    // start state polling every 10 seconds
    while (1) {
       sleep(10);
-
+      
       if (!check(s7Client.ConnectTo(ip, rack, slot), "s7Client.ConnectTo()")) {
          check(s7Client.Disconnect(), "s7Client.Disconnect()");
          continue;
       }
-
+ 
       if (S7CpuStatusStop == s7Client.PlcStatus()) {
          cout << "Plc state STOP." << endl;
          string receipt = push_emergency(retry, expire, key, token);
@@ -224,11 +219,5 @@ int main(int argc, char *argv[]) {
       check(s7Client.Disconnect(), "s7Client.Disconnect()");
    }
 
-   ext: if (!verbose || daemon) {
-      // restore cout stream buffer
-      cout.rdbuf(strm_out_buffer);
-      cerr.rdbuf(strm_err_buffer);
-   }
-
-   return status;
+   return EXIT_SUCCESS;
 }
