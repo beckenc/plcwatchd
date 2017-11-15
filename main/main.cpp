@@ -8,11 +8,25 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <iomanip>
+#include <ctime>
 #include "snap7.h"
 #include "pushover.h"
 
 using namespace std;
 
+ostream & tcout() {
+   time_t t = time(0);
+   struct tm *now = localtime( &t );
+   std::cout << 1900 + now->tm_year << "-" << 1 + now->tm_mon << "-" << now->tm_mday << " " << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << ": ";
+   return std::cout;
+}
+ostream & tcerr() {
+   time_t t = time(0);
+   struct tm *now = localtime( &t );
+   std::cerr << 1900 + now->tm_year << "-" << 1 + now->tm_mon << "-" << now->tm_mday << " " << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << ": ";
+   return std::cerr;
+}
 static TS7Client s7Client;
 
 /** @brief check the snap7 library function result and printout the related error message
@@ -22,9 +36,9 @@ static TS7Client s7Client;
 static bool check(int result, const char * function) {
    if (result != 0) {
       if (result < 0) {
-         cerr << function << ": library error (-1)" << endl;
+         tcerr() << function << ": library error (-1)" << endl;
       } else {
-         cerr << function << ": " << CliErrorText(result) << endl;
+         tcerr() << function << ": " << CliErrorText(result) << endl;
       }
    }
    return result == 0;
@@ -34,9 +48,9 @@ static bool check(int result, const char * function) {
  * @param s Received signal
  */
 static void signal_handler(int s) {
-   cout << "SIG " << s << " (" << strsignal(s) << ") received!" << endl;
+   tcout() << "SIG " << s << " (" << strsignal(s) << ") received!" << endl;
    if (s7Client.Connected()) {
-      cout << "Disconnect from PLC" << endl;
+      tcout() << "Disconnect from PLC" << endl;
       check(s7Client.Disconnect(), "s7Client.Disconnect()");
    }
    exit(EXIT_FAILURE);
@@ -51,7 +65,7 @@ void daemonize() {
       return; /* already a daemon */
    }
 
-   cout << "daemonize" << endl;
+   tcout() << "daemonize" << endl;
 
    int i = fork();
    if (i < 0) {
@@ -179,10 +193,13 @@ int main(int argc, char *argv[]) {
    }
       
    if (!verbose || daemon) {    
-      // redirect cout / cerr to logfile
+      // redirect tcout / cerr to logfile
       freopen(logfile, "a", stdout);
       freopen(logfile, "a", stderr);
    }
+   
+   tcout() << "Start state polling every 10 seconds" << endl;
+   
    // start state polling every 10 seconds
    while (1) {
       sleep(10);
@@ -193,7 +210,7 @@ int main(int argc, char *argv[]) {
       }
  
       if (S7CpuStatusStop == s7Client.PlcStatus()) {
-         cout << "Plc state STOP." << endl;
+         tcout() << "Plc state STOP." << endl;
          string receipt = push_emergency(retry, expire, key, token);
          bool acknowledged = false;
 
@@ -203,15 +220,15 @@ int main(int argc, char *argv[]) {
          
          do {
             sleep(5); // respect API and wait 5 seconds
-            cout << "Acknowledged?" << endl;
+            tcout() << "Acknowledged?" << endl;
             acknowledged = poll_receipt(receipt, token);
          } while (!acknowledged && (S7CpuStatusStop == s7Client.PlcStatus()));
 
          if (acknowledged) {
-            cout << "Acknowledged! Request RUN and re-arm watchdog." << endl;
+            tcout() << "Acknowledged! Request RUN and re-arm watchdog." << endl;
             check(s7Client.PlcHotStart(), "s7Client.PlcColdStart()");
          } else {
-            cout << "Left STOP. Cancel emergency and re-arm watchdog!" << endl;
+            tcout() << "Left STOP. Cancel emergency and re-arm watchdog!" << endl;
             cancel_emergency(receipt, token);
          }
       }
