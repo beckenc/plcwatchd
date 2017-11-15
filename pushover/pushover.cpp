@@ -13,7 +13,8 @@
 #include "rapidjson/document.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
-#include <iostream>
+
+#include "log.hpp"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ static size_t curl_process(void *contents, size_t size, size_t nmemb,
 
    string response;
    response.append((char*) contents, realsize);
-   //cout << "Response: " << response << endl;
+   //tcout() << "Response: " << response << endl;
    document->Parse(response.c_str());
  
    return realsize;
@@ -55,7 +56,7 @@ string push_emergency(const char* retry, const char* expire,
       post_data += "&title=Homeautomation crashed";
       post_data += "&message=Acknowledge this message to request RUN.";
 
-      cout << "Request: " << post_data << endl;
+      tcout() << "Request: " << post_data << endl;
 
       // The pushover response is parsed into a rapidjson::Document
       rapidjson::Document response;
@@ -78,24 +79,24 @@ string push_emergency(const char* retry, const char* expire,
       res = curl_easy_perform(curl);
       /* Check for errors */
       if (res != CURLE_OK) {
-         cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
+         tcerr() << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
       } else if(response.HasParseError()) {
-         cerr << "response has parse error" << endl;
+         tcerr() << "response has parse error" << endl;
       } else {
          // evaluate json response, extract receipt
          if (!response.HasMember("status") || response["status"].GetInt() != 1) {
             if (response.HasMember("errors")) {
                const rapidjson::Value& errors = response["errors"];
                for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
-                  cout << "push_emergency(): " << itr->GetString() << endl;
+                  tcout() << "push_emergency(): " << itr->GetString() << endl;
                }
             } else {
-               cout << "push_emergency(): Unable to access pushover.net" << endl;
+               tcout() << "push_emergency(): Unable to access pushover.net" << endl;
             }
          }
          if (response.HasMember("receipt")) {
             receipt = response["receipt"].GetString();
-            cout << "Receipt: " << receipt << endl;
+            tcout() << "Receipt: " << receipt << endl;
          }
       }
 
@@ -122,7 +123,7 @@ void cancel_emergency(const string& receipt, const char* token) {
       string post_data = "token=";
       post_data += token;
 
-      cout << "Request: " << get_data << "?" << post_data << endl;
+      tcout() << "Request: " << get_data << "?" << post_data << endl;
 
       // The pushover response is parsed into a rapidjson::Document
       rapidjson::Document response;
@@ -144,20 +145,20 @@ void cancel_emergency(const string& receipt, const char* token) {
       res = curl_easy_perform(curl);
       /* Check for errors */
       if (res != CURLE_OK) {
-         cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res)
+         tcerr() << "curl_easy_perform() failed: " << curl_easy_strerror(res)
                << endl;
       } else if(response.HasParseError()) {
-         cerr << "response has parse error" << endl;
+         tcerr() << "response has parse error" << endl;
       }else {
          // evaluate json response, extract receipt
          if (!response.HasMember("status") || response["status"].GetInt() != 1) {
             if (response.HasMember("errors")) {
                const rapidjson::Value& errors = response["errors"];
                for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
-                  cout << "cancel_emergency(): " << itr->GetString() << endl;
+                  tcout() << "cancel_emergency(): " << itr->GetString() << endl;
                }
             } else {
-               cout << "cancel_emergency(): Unable to access pushover.net" << endl;
+               tcout() << "cancel_emergency(): Unable to access pushover.net" << endl;
             }
          }
       }
@@ -184,7 +185,7 @@ bool poll_receipt(const string& receipt, const char* token) {
             + ".json?token=";
       get_data += token;
 
-      cout << "Request: " << get_data << endl;
+      tcout() << "Request: " << get_data << endl;
 
       // The pushover response is parsed into a rapidjson::Document
       rapidjson::Document response;
@@ -204,30 +205,30 @@ bool poll_receipt(const string& receipt, const char* token) {
       res = curl_easy_perform(curl);
       /* Check for errors */
       if (res != CURLE_OK) {
-         cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res)
+         tcerr() << "curl_easy_perform() failed: " << curl_easy_strerror(res)
                << endl;
       } else if(response.HasParseError()) {
-         cerr << "response has parse error" << endl;
+         tcerr() << "response has parse error" << endl;
       }else {
          // evaluate json response, extract receipt
          if (!response.HasMember("status") || response["status"].GetInt() != 1) {
             if (response.HasMember("errors")) {
                const rapidjson::Value& errors = response["errors"];
                for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
-                  cout << "poll_receipt(): " << itr->GetString() << endl;
+                  tcout() << "poll_receipt(): " << itr->GetString() << endl;
                }
             } else {
-               cout << "poll_receipt(): Unable to access pushover.net" << endl;
+               tcout() << "poll_receipt(): Unable to access pushover.net" << endl;
             }
          }
          if (response.HasMember("acknowledged")
                && (response["acknowledged"].GetInt() == 1)) {
-            cout << "poll_receipt(): emergency acknowledged" << endl;
+            tcout() << "poll_receipt(): emergency acknowledged" << endl;
             acknowledged = true;
          }
          if (response.HasMember("expired")
                && (response["expired"].GetInt() == 1)) {
-            cout << "poll_receipt(): emergency expired" << endl;
+            tcout() << "poll_receipt(): emergency expired" << endl;
          }
       }
 

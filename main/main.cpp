@@ -1,32 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream>
 #include <unistd.h>
 #include <string.h>
 #include <csignal>
-#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <iomanip>
 #include <ctime>
 #include "snap7.h"
 #include "pushover.h"
+#include "log.hpp"
 
 using namespace std;
 
-ostream & tcout() {
-   time_t t = time(0);
-   struct tm *now = localtime( &t );
-   std::cout << 1900 + now->tm_year << "-" << 1 + now->tm_mon << "-" << now->tm_mday << " " << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << ": ";
-   return std::cout;
-}
-ostream & tcerr() {
-   time_t t = time(0);
-   struct tm *now = localtime( &t );
-   std::cerr << 1900 + now->tm_year << "-" << 1 + now->tm_mon << "-" << now->tm_mday << " " << now->tm_hour << ":" << now->tm_min << ":" << now->tm_sec << ": ";
-   return std::cerr;
-}
 static TS7Client s7Client;
 
 /** @brief check the snap7 library function result and printout the related error message
