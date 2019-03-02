@@ -15,10 +15,10 @@
  * @param expire the pushover.net expire parameter
  * @param key the pushover.net user key
  * @param token the pushover.net application token
- * @param emergency receipt
+ * @param device the pushover.net device list e.g "dev1,dev2" or NULL for all devices
  */
 std::string push_emergency(const char* retry, const char* expire, const char* key,
-      const char* token);
+      const char* token, const char* device);
 /** @brief Cancel an emergency
  * @param receipt emergency receipt to poll for
  */
