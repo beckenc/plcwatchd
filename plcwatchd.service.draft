@@ -1,0 +1,11 @@
+[Unit]
+Description=plcwatchd
+After=syslog.target network.target
+
+[Service]
+ExecStart=/usr/local/bin/plcwatchd -k xxxxxxxxxxxxxxx -t xxxxxxxxxxxxxxx -i 10.10.10.2
+ExecReload=/bin/kill -HUP $MAINPID
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

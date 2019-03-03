@@ -95,10 +95,12 @@ static void usage() {
          << "-i ip [-r num -s num]" << endl << endl
          << "  -v   verbose" << endl
          << "  -d   daemonize" << endl
+         << "  -p   polling rate of the PLC state, default 10s" << endl
          << "  -k   key - pushover.net user key" << endl
          << "  -t   token - pushover.net appliacation token" << endl
          << "  -c   retry - pushover.net retry parameter, default 60s" << endl
          << "  -e   expire - pushover.net expire parameter, default 600" << endl
+         << "  -u   user - pushover.net device list e.g. dev1,dev2, default all devices" << endl
          << "  -i   ip - address of the plc" << endl
          << "  -r   rack - rack of the plc, default 0" << endl
          << "  -s   slot - slot of the plc, default 2" << endl
@@ -109,16 +111,18 @@ int main(int argc, char *argv[]) {
 
    int rack = 0;
    int slot = 2;
+   int pollingRate = 10; //seconds
    const char* retry = "60";
    const char* expire = "600";
    char* ip = NULL;
    char* key = NULL;
    char* token = NULL;
+   char* device = NULL;
    const char* logfile = "/dev/null";
    int option = 0;
    bool daemon = false;
    bool verbose = false;
-   
+
    // catch signals to close established Snap7 client connection ...
    signal(SIGABRT, &signal_handler);
    signal(SIGTERM, &signal_handler);
@@ -129,7 +133,7 @@ int main(int argc, char *argv[]) {
       return EXIT_FAILURE;
    }
 
-   while ((option = getopt(argc, argv, "dvi:r:s:k:t:c:e:l:")) != -1) {
+   while ((option = getopt(argc, argv, "dvi:r:s:p:u:k:t:c:e:l:")) != -1) {
       switch (option) {
       case 'v':
          verbose = true;
@@ -146,6 +150,9 @@ int main(int argc, char *argv[]) {
       case 's':
          slot = atoi(optarg);
          break;
+      case 'p':
+         pollingRate = atoi(optarg);
+         break;
       case 'k':
          key = optarg;
          break;
@@ -160,6 +167,9 @@ int main(int argc, char *argv[]) {
          break;
       case 'l':
          logfile = optarg;
+         break;
+      case 'u':
+         device = optarg;
          break;
       default:
          usage();
@@ -177,33 +187,33 @@ int main(int argc, char *argv[]) {
    if (daemon) {
       daemonize();
    }
-      
-   if (!verbose || daemon) {    
+
+   if (!verbose || daemon) {
       // redirect tcout / cerr to logfile
       freopen(logfile, "a", stdout);
       freopen(logfile, "a", stderr);
    }
-   
-   tcout() << "Start state polling every 10 seconds" << endl;
-   
-   // start state polling every 10 seconds
+
+   tcout() << "Start state0 polling every " << pollingRate << " seconds" << endl;
+
+   // start state polling every 'pollingRate' seconds
    while (1) {
-      sleep(10);
-      
+      sleep(pollingRate);
+
       if (!check(s7Client.ConnectTo(ip, rack, slot), "s7Client.ConnectTo()")) {
          check(s7Client.Disconnect(), "s7Client.Disconnect()");
          continue;
       }
- 
+
       if (S7CpuStatusStop == s7Client.PlcStatus()) {
          tcout() << "Plc state STOP." << endl;
-         string receipt = push_emergency(retry, expire, key, token);
+         string receipt = push_emergency(retry, expire, key, token, device);
          bool acknowledged = false;
 
          if(receipt.empty()) {
             continue; // error during pushing... retry
          }
-         
+
          do {
             sleep(5); // respect API and wait 5 seconds
             tcout() << "Acknowledged?" << endl;

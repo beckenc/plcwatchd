@@ -33,7 +33,7 @@ static size_t curl_process(void *contents, size_t size, size_t nmemb,
 }
 
 string push_emergency(const char* retry, const char* expire,
-      const char* key, const char* token) {
+      const char* key, const char* token, const char* device) {
    string receipt;
    CURL *curl;
    CURLcode res;
@@ -53,6 +53,10 @@ string push_emergency(const char* retry, const char* expire,
       post_data += retry;
       post_data += "&expire=";
       post_data += expire;
+      if (device) {
+         post_data += "&device=";
+         post_data += device;
+      }
       post_data += "&title=Homeautomation crashed";
       post_data += "&message=Acknowledge this message to request RUN.";
 
