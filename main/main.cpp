@@ -198,16 +198,32 @@ int main(int argc, char *argv[]) {
 
    // start state polling every 'pollingRate' seconds
    while (1) {
+      static bool notify_connect_error = true;
+      static bool notify_connect_success = true;
+      static bool notify_run = true;
       sleep(pollingRate);
 
       if (!check(s7Client.ConnectTo(ip, rack, slot), "s7Client.ConnectTo()")) {
+         if(notify_connect_error) {
+            tcout() << "S7 connection failed!" << endl;
+            (void)push_emergency("Homeautomation system disconnected", "S7 connection failed", "1", retry, expire, key, token, device);
+            notify_connect_error = false;
+         }
+         notify_connect_success = true;
          check(s7Client.Disconnect(), "s7Client.Disconnect()");
          continue;
       }
+      // connection established
+      if(notify_connect_success) {
+         tcout() << "S7 connection established!" << endl;
+         (void)push_emergency("Homeautomation system connected", "S7 connection established", "0", retry, expire, key, token, device);
+         notify_connect_success = false;
+      }
+      notify_connect_error = true;
 
       if (S7CpuStatusStop == s7Client.PlcStatus()) {
          tcout() << "Plc state STOP." << endl;
-         string receipt = push_emergency(retry, expire, key, token, device);
+         string receipt = push_emergency("Homeautomation system crashed", "Acknowlige to requst STARTUP", "2", retry, expire, key, token, device);
          bool acknowledged = false;
 
          if(receipt.empty()) {
@@ -226,6 +242,13 @@ int main(int argc, char *argv[]) {
          } else {
             tcout() << "Left STOP. Cancel emergency and re-arm watchdog!" << endl;
             cancel_emergency(receipt, token);
+         }
+         notify_run = true;
+      } else if(S7CpuStatusRun == s7Client.PlcStatus()) {
+         if(notify_run) {
+            tcout() << "Plc state RUN." << endl;
+            (void)push_emergency("Homeautomation system alive", "PLC state RUN", "-1", retry, expire, key, token, device);
+            notify_run = false;
          }
       }
 

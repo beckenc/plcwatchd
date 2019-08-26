@@ -32,8 +32,8 @@ static size_t curl_process(void *contents, size_t size, size_t nmemb,
    return realsize;
 }
 
-string push_emergency(const char* retry, const char* expire,
-      const char* key, const char* token, const char* device) {
+string push_emergency(const char* title, const char* message, const char* priority, const char* retry, 
+      const char* expire, const char* key, const char* token, const char* device) {
    string receipt;
    CURL *curl;
    CURLcode res;
@@ -48,7 +48,8 @@ string push_emergency(const char* retry, const char* expire,
       post_data += token;
       post_data += "&user=";
       post_data += key;
-      post_data += "&priority=2";
+      post_data += "&priority=";
+      post_data += priority;
       post_data += "&retry=";
       post_data += retry;
       post_data += "&expire=";
@@ -57,8 +58,10 @@ string push_emergency(const char* retry, const char* expire,
          post_data += "&device=";
          post_data += device;
       }
-      post_data += "&title=Homeautomation crashed";
-      post_data += "&message=Acknowledge this message to request RUN.";
+      post_data += "&title=";
+      post_data += title;
+      post_data += "&message=";
+      post_data += message;
 
       tcout() << "Request: " << post_data << endl;
 
