@@ -16,7 +16,6 @@
 * make clean all
 * sudo cp plcwatchd /usr/local/bin/
 * cp ../plcwatchd.service.draft ../plcwatchd.service
-* nano ../plcwatchd.service
 * sudo cp /plcwatchd.service /etc/systemd/system
 * sudo systemctl enable plcwatchd
 
