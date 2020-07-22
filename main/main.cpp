@@ -223,7 +223,7 @@ int main(int argc, char *argv[]) {
 
       if (S7CpuStatusStop == s7Client.PlcStatus()) {
          tcout() << "Plc state STOP." << endl;
-         string receipt = push_emergency("Homeautomation system crashed", "Acknowlige to requst STARTUP", "2", retry, expire, key, token, device);
+         string receipt = push_emergency("Homeautomation system crashed", "Acknowledge to requst STARTUP", "2", retry, expire, key, token, device);
          bool acknowledged = false;
 
          if(receipt.empty()) {
