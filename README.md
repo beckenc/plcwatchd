@@ -9,14 +9,14 @@
 * sudo apt-get update
 * sudo apt-get install libsnap7-1 libsnap7-1-dev
 * sudo apt-get install libcurl4-gnutls-dev
+* sudo apt-get install rapidjson-dev
 
 # install
-* git submodule update --init
 * cd Release
 * make clean all
 * sudo cp plcwatchd /usr/local/bin/
 * cp ../plcwatchd.service.draft ../plcwatchd.service
-* nano ../plcwatchd.service
+* vi ../plcwatchd.service
 * sudo cp /plcwatchd.service /etc/systemd/system
 * sudo systemctl enable plcwatchd
 

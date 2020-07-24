@@ -21,18 +21,17 @@ using namespace std;
 /** @brief Parse json response, got from libcurl
  */
 static size_t curl_process(void *contents, size_t size, size_t nmemb,
-      rapidjson::Document *document) {
+      std::string *curl_response) {
    size_t realsize = size * nmemb;
 
-   string response;
-   response.append((char*) contents, realsize);
-   //tcout() << "Response: " << response << endl;
-   document->Parse(response.c_str());
- 
+   // congatenate response
+   curl_response->append((char*) contents, realsize);
+   //tcout() << "Response: " << *curl_response << endl;
+
    return realsize;
 }
 
-string push_emergency(const char* title, const char* message, const char* priority, const char* retry, 
+string push_emergency(const char* title, const char* message, const char* priority, const char* retry,
       const char* expire, const char* key, const char* token, const char* device) {
    string receipt;
    CURL *curl;
@@ -66,7 +65,7 @@ string push_emergency(const char* title, const char* message, const char* priori
       tcout() << "Request: " << post_data << endl;
 
       // The pushover response is parsed into a rapidjson::Document
-      rapidjson::Document response;
+      std::string response;
 
       /* First set the URL that is about to receive our POST. This URL can
        just as well be a https:// URL if that is what should receive the
@@ -83,17 +82,19 @@ string push_emergency(const char* title, const char* message, const char* priori
       curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
       /* Perform the request, res will get the return code */
+      rapidjson::Document document;
       res = curl_easy_perform(curl);
+      document.Parse(response.c_str());
       /* Check for errors */
       if (res != CURLE_OK) {
          tcerr() << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
-      } else if(response.HasParseError()) {
-         tcerr() << "response has parse error" << endl;
+      } else if(document.HasParseError()) {
+         tcerr() << "document has parse error" << endl;
       } else {
-         // evaluate json response, extract receipt
-         if (!response.HasMember("status") || response["status"].GetInt() != 1) {
-            if (response.HasMember("errors")) {
-               const rapidjson::Value& errors = response["errors"];
+         // evaluate json document, extract receipt
+         if (!document.HasMember("status") || document["status"].GetInt() != 1) {
+            if (document.HasMember("errors")) {
+               const rapidjson::Value& errors = document["errors"];
                for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
                   tcout() << "push_emergency(): " << itr->GetString() << endl;
                }
@@ -101,8 +102,8 @@ string push_emergency(const char* title, const char* message, const char* priori
                tcout() << "push_emergency(): Unable to access pushover.net" << endl;
             }
          }
-         if (response.HasMember("receipt")) {
-            receipt = response["receipt"].GetString();
+         if (document.HasMember("receipt")) {
+            receipt = document["receipt"].GetString();
             tcout() << "Receipt: " << receipt << endl;
          }
       }
@@ -133,7 +134,7 @@ void cancel_emergency(const string& receipt, const char* token) {
       tcout() << "Request: " << get_data << "?" << post_data << endl;
 
       // The pushover response is parsed into a rapidjson::Document
-      rapidjson::Document response;
+      std::string response;
 
       /* First set the URL that is about to receive our POST. This URL can
        just as well be a https:// URL if that is what should receive the
@@ -149,18 +150,20 @@ void cancel_emergency(const string& receipt, const char* token) {
       curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
       /* Perform the request, res will get the return code */
+      rapidjson::Document document;
       res = curl_easy_perform(curl);
+      document.Parse(response.c_str());
       /* Check for errors */
       if (res != CURLE_OK) {
          tcerr() << "curl_easy_perform() failed: " << curl_easy_strerror(res)
                << endl;
-      } else if(response.HasParseError()) {
-         tcerr() << "response has parse error" << endl;
+      } else if(document.HasParseError()) {
+         tcerr() << "document has parse error" << endl;
       }else {
-         // evaluate json response, extract receipt
-         if (!response.HasMember("status") || response["status"].GetInt() != 1) {
-            if (response.HasMember("errors")) {
-               const rapidjson::Value& errors = response["errors"];
+         // evaluate json document, extract receipt
+         if (!document.HasMember("status") || document["status"].GetInt() != 1) {
+            if (document.HasMember("errors")) {
+               const rapidjson::Value& errors = document["errors"];
                for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
                   tcout() << "cancel_emergency(): " << itr->GetString() << endl;
                }
@@ -195,7 +198,7 @@ bool poll_receipt(const string& receipt, const char* token) {
       tcout() << "Request: " << get_data << endl;
 
       // The pushover response is parsed into a rapidjson::Document
-      rapidjson::Document response;
+      std::string response;
 
       /* First set the URL that is about to receive our POST. This URL can
        just as well be a https:// URL if that is what should receive the
@@ -209,18 +212,20 @@ bool poll_receipt(const string& receipt, const char* token) {
       curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
       /* Perform the request, res will get the return code */
+      rapidjson::Document document;
       res = curl_easy_perform(curl);
+      document.Parse(response.c_str());
       /* Check for errors */
       if (res != CURLE_OK) {
          tcerr() << "curl_easy_perform() failed: " << curl_easy_strerror(res)
                << endl;
-      } else if(response.HasParseError()) {
-         tcerr() << "response has parse error" << endl;
+      } else if(document.HasParseError()) {
+         tcerr() << "document has parse error" << endl;
       }else {
-         // evaluate json response, extract receipt
-         if (!response.HasMember("status") || response["status"].GetInt() != 1) {
-            if (response.HasMember("errors")) {
-               const rapidjson::Value& errors = response["errors"];
+         // evaluate json document, extract receipt
+         if (!document.HasMember("status") || document["status"].GetInt() != 1) {
+            if (document.HasMember("errors")) {
+               const rapidjson::Value& errors = document["errors"];
                for(rapidjson::Value::ConstValueIterator itr = errors.Begin(); itr != errors.End(); ++itr) {
                   tcout() << "poll_receipt(): " << itr->GetString() << endl;
                }
@@ -228,13 +233,13 @@ bool poll_receipt(const string& receipt, const char* token) {
                tcout() << "poll_receipt(): Unable to access pushover.net" << endl;
             }
          }
-         if (response.HasMember("acknowledged")
-               && (response["acknowledged"].GetInt() == 1)) {
+         if (document.HasMember("acknowledged")
+               && (document["acknowledged"].GetInt() == 1)) {
             tcout() << "poll_receipt(): emergency acknowledged" << endl;
             acknowledged = true;
          }
-         if (response.HasMember("expired")
-               && (response["expired"].GetInt() == 1)) {
+         if (document.HasMember("expired")
+               && (document["expired"].GetInt() == 1)) {
             tcout() << "poll_receipt(): emergency expired" << endl;
          }
       }

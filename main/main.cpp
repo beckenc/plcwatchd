@@ -190,11 +190,11 @@ int main(int argc, char *argv[]) {
 
    if (!verbose || daemon) {
       // redirect tcout / cerr to logfile
-      freopen(logfile, "a", stdout);
-      freopen(logfile, "a", stderr);
+      [[maybe_unused]] auto f_stdout = freopen(logfile, "a", stdout);
+      [[maybe_unused]] auto f_stderr = freopen(logfile, "a", stderr);
    }
 
-   tcout() << "Start state0 polling every " << pollingRate << " seconds" << endl;
+   tcout() << "Start state polling every " << pollingRate << " seconds" << endl;
 
    // start state polling every 'pollingRate' seconds
    while (1) {
@@ -227,7 +227,8 @@ int main(int argc, char *argv[]) {
          bool acknowledged = false;
 
          if(receipt.empty()) {
-            continue; // error during pushing... retry
+            tcout() << "Error during pushing... retry" << endl;
+            continue;
          }
 
          do {

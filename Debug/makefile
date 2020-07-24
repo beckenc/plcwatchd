@@ -37,7 +37,7 @@ endif
 
 -include ../makefile.defs
 
-# Add inputs and outputs from these tool invocations to the build variables 
+# Add inputs and outputs from these tool invocations to the build variables
 
 # All Target
 all: plcwatchd
@@ -45,7 +45,7 @@ all: plcwatchd
 # Tool invocations
 plcwatchd: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
-	@echo 'Invoking: Cygwin C++ Linker'
+	@echo 'Invoking: C++ Linker'
 	g++ -o "plcwatchd" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
