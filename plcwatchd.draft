@@ -4,7 +4,7 @@
 
 home=/opt/plcwatchd
 command="${home}/plcwatchd"
-command_args="-i 192.168.178.105 -k u5w94jotqcyo44qqaupqe85optgse9 -t ao27231ikac4not1z1htuj3rzokv1t -c 600 -e 3600 -l
+command_args="-i 192.168.178.105 -k xxxxxxxxxxxxxxxx -t xxxxxxxxxxxxxxxxx -c 600 -e 3600 -l
 /var/log/plcwatchd.log"
 pidfile=/run/plcwatchd.pid
 start_stop_daemon_args="--chdir ${home} -p ${pidfile} --background -m"
