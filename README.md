@@ -7,7 +7,7 @@
 # precondition
 * sudo add-apt-repository ppa:gijzelaar/snap7
 * sudo apt-get update
-* sudo apt-get install libsnap7-1 libsnap7-1-dev
+* sudo apt-get install libsnap7-dev libsnap7-1
 * sudo apt-get install libcurl4-gnutls-dev
 * sudo apt-get install rapidjson-dev
 
