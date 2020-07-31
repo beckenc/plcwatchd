@@ -3,7 +3,7 @@ Description=plcwatchd
 After=syslog.target network.target
 
 [Service]
-ExecStart=/usr/local/bin/plcwatchd -k xxxxxxxxxxxxxxx -t xxxxxxxxxxxxxxx -i 10.10.10.2
+ExecStart=/usr/local/bin/plcwatchd -i 192.168.178.105 -k xxxxxxxxxxxxxxxx -t xxxxxxxxxxxxxxxxx -c 600 -e 3600 -l /var/log/plcwatchd.log
 ExecReload=/bin/kill -HUP $MAINPID
 StandardOutput=null
 
