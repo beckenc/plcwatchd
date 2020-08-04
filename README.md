@@ -17,6 +17,18 @@
 * sudo cp plcwatchd /usr/local/bin/
 * cp ../plcwatchd.service.draft ../plcwatchd.service
 * vi ../plcwatchd.service
-* sudo cp /plcwatchd.service /etc/systemd/system
+* sudo cp ../plcwatchd.service /etc/systemd/system
 * sudo systemctl enable plcwatchd
+
+# start
+* sudo systemctl start plcwatchd
+
+# stop
+* sudo systemctl stop plcwatchd
+
+# status
+* sudo systemctl status plcwatchd
+or
+* ps aux | grep plcwatchd
+
 

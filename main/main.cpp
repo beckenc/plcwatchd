@@ -91,15 +91,15 @@ void daemonize() {
 }
 
 static void usage() {
-   cout << "Usage: plcwatchd [-v -d] -k key -t token [-c sec -e sec ] "
-         << "-i ip [-r num -s num]" << endl << endl
+   cout << "Usage: plcwatchd [-v] [-d] -k key -t token -i ip "
+         << "[-r num] [-s num] [-c sec] [-e sec] [-p sec] [-l file] [-u user]"<< endl << endl
          << "  -v   verbose" << endl
          << "  -d   daemonize" << endl
-         << "  -p   polling rate of the PLC state, default 10s" << endl
+         << "  -p   polling rate of the PLC state in seconds, default 10" << endl
          << "  -k   key - pushover.net user key" << endl
          << "  -t   token - pushover.net appliacation token" << endl
-         << "  -c   retry - pushover.net retry parameter, default 60s" << endl
-         << "  -e   expire - pushover.net expire parameter, default 600" << endl
+         << "  -c   retry - pushover.net retry parameter in seconds, default 60" << endl
+         << "  -e   expire - pushover.net expire parameter in seconds, default 600" << endl
          << "  -u   user - pushover.net device list e.g. dev1,dev2, default all devices" << endl
          << "  -i   ip - address of the plc" << endl
          << "  -r   rack - rack of the plc, default 0" << endl
