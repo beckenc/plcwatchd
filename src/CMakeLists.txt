@@ -1,0 +1,5 @@
+include_directories(main)
+include_directories(snap7)
+add_subdirectory(main)
+add_subdirectory(pushover)
+add_subdirectory(snap7)
