@@ -1,0 +1,8 @@
+services:
+  plcwatchd:
+    build:
+      context: .
+    image: "beckenc/plcwatchd:latest"
+    container_name: "plcwatchd"
+    command: ${CMD}
+    restart: unless-stopped
